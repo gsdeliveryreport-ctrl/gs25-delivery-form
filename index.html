@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GS25 Ачаа хүлээн авах</title>
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7;
+    margin: 0;
+    padding: 16px;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .header {
+    background: #ec1c2e;
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .header p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .driver-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .driver-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .driver-row:last-child {
+    border-bottom: none;
+  }
+  .driver-label {
+    color: #666;
+    font-size: 14px;
+  }
+  .driver-value {
+    font-weight: 500;
+    font-size: 14px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  label:first-child {
+    margin-top: 0;
+  }
+  select, input[type="number"] {
+    width: 100%;
+    padding: 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    background: white;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+  }
+  select:focus, input:focus {
+    outline: none;
+    border-color: #ec1c2e;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: #ec1c2e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 24px;
+  }
+  .submit-btn:disabled {
+    background: #ccc;
+  }
+  .submit-btn:active {
+    background: #c8192a;
+  }
+  .loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+  }
+  .success, .error {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .success-icon, .error-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .success-icon {
+    color: #22c55e;
+  }
+  .error-icon {
+    color: #ec1c2e;
+  }
+  .message-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .message-text {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .retry-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>GS25 Ачаа хүлээн авах</h1>
+    <p>Мэдээллээ бөглөнө үү</p>
+  </div>
+
+  <!-- Loading state -->
+  <div id="loading" class="card loading">
+    Мэдээлэл ачаалж байна...
+  </div>
+
+  <!-- Error state -->
+  <div id="error" class="card error" style="display:none">
+    <div class="error-icon">⚠️</div>
+    <div class="message-title">Алдаа гарлаа</div>
+    <div class="message-text" id="error-message">Дахин оролдоно уу</div>
+    <button class="retry-btn" onclick="location.reload()">Дахин оролдох</button>
+  </div>
+
+  <!-- Success state -->
+  <div id="success" class="card success" style="display:none">
+    <div class="success-icon">✓</div>
+    <div class="message-title">Амжилттай хадгалагдлаа</div>
+    <div class="message-text">Мэдээлэл системд бүртгэгдлээ. Баярлалаа!</div>
+  </div>
+
+  <!-- Main form -->
+  <div id="form-container" style="display:none">
+    <div class="card">
+      <div class="driver-info">
+        <div class="driver-row">
+          <span class="driver-label">Жолооч</span>
+          <span class="driver-value" id="driver-name">-</span>
+        </div>
+        <div class="driver-row">
+          <span class="driver-label">Машины дугаар</span>
+          <span class="driver-value" id="plate-number">-</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="delivery-form">
+        <label for="delivery-select">Ачсан салбарыг сонгоно уу</label>
+        <select id="delivery-select" required>
+          <option value="">-- Сонгох --</option>
+        </select>
+
+        <label for="boxes">Хүлээн авсан хайрцаг</label>
+        <input type="number" id="boxes" min="0" inputmode="numeric" required>
+
+        <label for="baskets">Хүлээн авсан сагс</label>
+        <input type="number" id="baskets" min="0" inputmode="numeric" required>
+
+        <label for="empty-baskets">Хүлээлгэн өгсөн хоосон сагс</label>
+        <input type="number" id="empty-baskets" min="0" value="0" inputmode="numeric" required>
+
+        <button type="submit" class="submit-btn" id="submit-btn">Хадгалах</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ ТОХИРГОО ============
+// Энэ URL-уудыг N8N webhook URL-аар солих (дараах үе шатанд)
+const GET_DELIVERIES_URL = 'https://gsdeliveryreport.app.n8n.cloud/webhook/driver-deliveries';
+const CONFIRM_URL = 'https://gsdeliveryreport.app.n8n.cloud/webhook/confirm-delivery';
+
+// ============ ЛОГИК ============
+const params = new URLSearchParams(window.location.search);
+const driverId = params.get('driver');
+
+const $loading = document.getElementById('loading');
+const $error = document.getElementById('error');
+const $errorMsg = document.getElementById('error-message');
+const $form = document.getElementById('form-container');
+const $success = document.getElementById('success');
+const $driverName = document.getElementById('driver-name');
+const $plateNumber = document.getElementById('plate-number');
+const $select = document.getElementById('delivery-select');
+const $submitBtn = document.getElementById('submit-btn');
+
+function showError(msg) {
+  $loading.style.display = 'none';
+  $form.style.display = 'none';
+  $success.style.display = 'none';
+  $error.style.display = 'block';
+  $errorMsg.textContent = msg || 'Алдаа гарлаа';
+}
+
+function showSuccess() {
+  $loading.style.display = 'none';
+  $form.style.display = 'none';
+  $error.style.display = 'none';
+  $success.style.display = 'block';
+}
+
+function showForm() {
+  $loading.style.display = 'none';
+  $error.style.display = 'none';
+  $success.style.display = 'none';
+  $form.style.display = 'block';
+}
+
+// Жолоочийн хүргэгдэж байгаа ачилтуудыг татах
+async function loadDeliveries() {
+  if (!driverId) {
+    showError('QR кодод жолоочийн мэдээлэл байхгүй байна');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${GET_DELIVERIES_URL}?driver=${encodeURIComponent(driverId)}`);
+    if (!response.ok) throw new Error('Сервертэй холбогдож чадсангүй');
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      showError(data.error);
+      return;
+    }
+    
+    if (!data.deliveries || data.deliveries.length === 0) {
+      showError('Одоогоор хүргэгдэж байгаа ачилт байхгүй байна');
+      return;
+    }
+
+    $driverName.textContent = data.driver_name || driverId;
+    $plateNumber.textContent = data.plate_number || '-';
+
+    data.deliveries.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.delivery_id;
+      opt.textContent = `${d.branch_code} - ${d.branch_name}`;
+      opt.dataset.rowNumber = d.row_number;
+      $select.appendChild(opt);
+    });
+
+    showForm();
+  } catch (e) {
+    showError(e.message || 'Сүлжээний алдаа');
+  }
+}
+
+// Form submit
+document.getElementById('delivery-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const selectedOption = $select.options[$select.selectedIndex];
+  const payload = {
+    driver_id: driverId,
+    delivery_id: $select.value,
+    row_number: selectedOption.dataset.rowNumber,
+    boxes: parseInt(document.getElementById('boxes').value, 10),
+    baskets: parseInt(document.getElementById('baskets').value, 10),
+    empty_baskets: parseInt(document.getElementById('empty-baskets').value, 10),
+    submitted_at: new Date().toISOString()
+  };
+
+  $submitBtn.disabled = true;
+  $submitBtn.textContent = 'Хадгалж байна...';
+
+  try {
+    const response = await fetch(CONFIRM_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error('Хадгалж чадсангүй');
+    
+    const result = await response.json();
+    if (result.error) {
+      showError(result.error);
+      return;
+    }
+
+    showSuccess();
+  } catch (e) {
+    showError(e.message || 'Хадгалах үед алдаа гарлаа');
+    $submitBtn.disabled = false;
+    $submitBtn.textContent = 'Хадгалах';
+  }
+});
+
+// Эхлэх
+loadDeliveries();
+</script>
+</body>
+</html>
